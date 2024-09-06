@@ -47,7 +47,7 @@ const Todos: FC<Props> = ({ todos }) => {
       <div className="text-5xl font-medium">To-do app</div>
       <div className="w-full flex flex-col mt-8 gap-2">
         {/* Mapping through todoItems and rendering Todo component for each */}
-        {todoItems.map((todo) => (
+        {todoItems.map((todo) => (x
           <Todo
             key={todo.id}
             todo={todo}

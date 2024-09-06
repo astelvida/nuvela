@@ -78,17 +78,18 @@ export async function generateImage(
 
 export const generateImageWithData = async (prompt, chapter, index) => {
   const url = await generateImage(prompt);
+
+  console.log("Generated image for chapter:", { url, prompt });
+
   return { ...chapter, image: url, index };
 };
 
-export async function generateImagesForChapters(
-  chapters: { title: string; content: string }[]
-): Promise<string[]> {
+export async function generateImagesForChapters({ title, chapters }): Promise<string[]> {
   const imagePromises = chapters.map((chapter, index) =>
     generateImageWithData(
-      `Create an image for a book chapter titled "${
+      `Create an image for the #${index + 1} chapter titled "${
         chapter.title
-      }". The chapter is about: ${chapter.content.slice(0, 100)}...`,
+      }". The chapter is about: ${chapter.content}`,
       chapter,
       index
     )
@@ -96,7 +97,7 @@ export async function generateImagesForChapters(
 
   try {
     const data = await Promise.all(imagePromises);
-    console.log(data);
+    console.dir(data, { null: 4 });
     return data;
   } catch (error) {
     console.error("Error generating images for chapters:", error);

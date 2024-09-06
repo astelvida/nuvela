@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 
-await import("./env.mjs");
-
 const nextConfig = {
   images: {
-    remotePatterns: [{ hostname: "utfs.io" }],
+    remotePatterns: [
+      { hostname: "utfs.io" },
+      { hostname: "fmzpxyoqrdbpjmrxhpjr.supabase.co" },
+      { hostname: "oaidalleapiprodscus.blob.core.windows.net" },
+    ],
   },
   typescript: {
     ignoreBuildErrors: true,
