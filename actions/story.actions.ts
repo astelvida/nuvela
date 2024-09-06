@@ -1,5 +1,6 @@
 'use server';
 
+import { Story } from '@/lib/utils';
 import OpenAI from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod.mjs';
 import { z } from 'zod';
@@ -43,16 +44,15 @@ export async function generateStory(formData: FormData) {
   });
 
   const parsedCompletion = completion.choices[0].message.parsed;
-  return parsedCompletion;
+  return parsedCompletion as Story;
 }
 
 export async function generateImage(prompt: string): Promise<string> {
   try {
     const response = await openai.images.generate({
-      // model: 'dall-e-3',
       prompt: prompt,
       n: 1,
-      size: '1024x1024',
+      size: '512x512',
     });
 
     const imageUrl = response.data[0].url;
@@ -67,26 +67,33 @@ export async function generateImage(prompt: string): Promise<string> {
   }
 }
 
+export const generateImageWithData = async (prompt, chapter, index) => {
+  const url = await generateImage(prompt);
+  return { ...chapter, image: url, index };
+};
+
 export async function generateImagesForChapters(
   chapters: { title: string; content: string }[]
 ): Promise<string[]> {
-  const imagePromises = chapters.map((chapter) =>
-    generateImage(
+  const imagePromises = chapters.map((chapter, index) =>
+    generateImageWithData(
       `Create an image for a book chapter titled "${
         chapter.title
-      }". The chapter is about: ${chapter.content.slice(0, 100)}...`
+      }". The chapter is about: ${chapter.content.slice(0, 100)}...`,
+      chapter,
+      index
     )
   );
 
   try {
-    const images = await Promise.all(imagePromises);
-    return images;
+    const data = await Promise.all(imagePromises);
+    console.log(data);
+    return data;
   } catch (error) {
     console.error('Error generating images for chapters:', error);
     throw new Error('Failed to generate images for chapters');
   }
 }
-
 export async function generateStreamingStory(formData: FormData) {
   const prompt = formData.get('prompt');
 

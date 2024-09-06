@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -23,38 +23,15 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
-import { generateStory, generateStreamingStory } from '@/actions/story.actions';
+import {
+  generateStory,
+  generateImagesForChapters,
+} from '@/actions/story.actions';
 import { Loader2 } from 'lucide-react';
-import { ChatCompletionStreamingRunner } from 'openai/lib/ChatCompletionStreamingRunner.mjs';
-import { Skeleton } from './ui/skeleton';
-
-function StorySkeleton() {
-  return (
-    <div className='w-full max-w-4xl mx-auto space-y-8'>
-      <Skeleton className='h-12 w-3/4 mx-auto' />
-      {[1, 2, 3].map((_, index) => (
-        <Card key={index}>
-          <CardHeader>
-            <Skeleton className='h-8 w-3/4' />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className='h-4 w-full mb-2' />
-            <Skeleton className='h-4 w-full mb-2' />
-            <Skeleton className='h-4 w-3/4' />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-type Story = {
-  title: string;
-  chapters: {
-    title: string;
-    content: string;
-  }[];
-};
+import mockData from '@/lib/mockdata.json';
+import { StoryView } from './story-view';
+import { StorySkeleton } from './story-skeleton';
+import { Story } from '@/lib/utils';
 
 const characterSamples = [
   'A brilliant but eccentric inventor with a mysterious past',
@@ -83,6 +60,10 @@ export function StoryGenerator() {
   const [story, setStory] = useState<Story | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    setStory(mockData);
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -92,16 +73,20 @@ export function StoryGenerator() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    setStory(null);
     try {
       const formData = new FormData();
       formData.append('prompt', values.prompt);
-
       const generatedStory = await generateStory(formData);
+      const { title, chapters } = generatedStory;
 
-      setStory(generatedStory);
+      setStory({ title, chapters });
+      setIsLoading(false);
+
+      const chaptersWithImages = await generateImagesForChapters(chapters);
+      setStory((prev) => ({ ...prev, chapters: chaptersWithImages }));
     } catch (error) {
-      console.error('Failed to generate story:', error);
-      // You might want to set an error state here and display it to the user
+      console.error('Failed to generate story or images:', error);
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +103,7 @@ export function StoryGenerator() {
           <CardTitle>AI Story Generator</CardTitle>
           <CardDescription>
             Enter a topic or prompt to generate a unique story with three
-            chapters.
+            chapters and images.
           </CardDescription>
         </CardHeader>
         <Form {...form}>
@@ -168,7 +153,7 @@ export function StoryGenerator() {
                 {isLoading ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Generating Story...
+                    Generating Story and Images...
                   </>
                 ) : (
                   'Generate Story'
@@ -178,23 +163,11 @@ export function StoryGenerator() {
           </form>
         </Form>
       </Card>
-      {isLoading && <StorySkeleton />}
-      {story && !isLoading && (
-        <div className='w-full max-w-4xl mx-auto space-y-8'>
-          <h1 className='text-4xl font-bold text-center'>{story.title}</h1>
-          {story.chapters.map((chapter, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardTitle className='text-2xl'>
-                  Chapter {index + 1}: {chapter.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className='whitespace-pre-wrap'>{chapter.content}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+
+      {story === null || isLoading ? (
+        <StorySkeleton />
+      ) : (
+        <StoryView story={story} />
       )}
     </div>
   );
