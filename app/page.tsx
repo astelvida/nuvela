@@ -1,5 +1,5 @@
 import { StoryGenerator } from "@/components/story-generator";
 
-export default function Page() {
+export default function Home() {
   return <StoryGenerator />;
 }

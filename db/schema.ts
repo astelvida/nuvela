@@ -1,23 +1,19 @@
-import {
-  boolean,
-  integer,
-  pgTableCreator,
-  serial,
-  text,
-  timestamp,
-  uuid,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { integer, text, boolean, pgTable, serial, varchar, timestamp } from "drizzle-orm/pg-core";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
-export const createTable = pgTableCreator((name) => `nuvela_${name}`);
+export const todo = pgTable("todo", {
+  id: integer("id").primaryKey(),
+  text: text("text").notNull(),
+  done: boolean("done").default(false).notNull(),
+});
+// /**
+//  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
+//  * database instance for multiple projects.
+//  *
+//  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
+//  */
+// export const createTable = pgTableCreator((name) => `nuvela_${name}`);
 
-export const stories = createTable("stories", {
+export const story = pgTable("story", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   userId: varchar("userId", { length: 255 }).notNull(),
@@ -29,22 +25,22 @@ export const stories = createTable("stories", {
     .$onUpdate(() => new Date()),
 });
 
-export const chapters = createTable("chapters", {
+export const chapter = pgTable("chapter", {
   id: serial("id").primaryKey(),
   storyId: integer("storyId")
     .notNull()
-    .references(() => stories.id, { onDelete: "cascade" }),
+    .references(() => story.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
   imageUrl: varchar("imageUrl", { length: 2083 }).notNull(), // Max URL length
 });
 
-// export const images = createTable("images", {
-//   id: serial("id").primaryKey(),
-//   storyId: uuid("story_id")
-//     .references(() => stories.id)
-//     .notNull(),
-//   title: varchar("title", { length: 255 }).notNull(),
-//   content: text("content").notNull(),
-//   image: varchar("image", { length: 2083 }).notNull(), // Max URL length
-// });
+// // export const images = createTable("images", {
+// //   id: serial("id").primaryKey(),
+// //   storyId: uuid("story_id")
+// //     .references(() => stories.id)
+// //     .notNull(),
+// //   title: varchar("title", { length: 255 }).notNull(),
+// //   content: text("content").notNull(),
+// //   image: varchar("image", { length: 2083 }).notNull(), // Max URL length
+// // });

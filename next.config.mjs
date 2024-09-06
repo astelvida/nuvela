@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+
+await import("./env.mjs");
+
 const nextConfig = {
   images: {
     remotePatterns: [{ hostname: "utfs.io" }],

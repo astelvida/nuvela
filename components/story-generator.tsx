@@ -30,6 +30,8 @@ import { StoryView } from "./story-view";
 import { StorySkeleton } from "./story-skeleton";
 import { characterSamples, Story } from "@/lib/utils";
 import { ActionButtons } from "./save-story";
+import Stories from "./stories";
+import { addStory, getStories } from "@/actions/dbActions";
 
 const formSchema = z.object({
   prompt: z.string().min(10, {
@@ -59,13 +61,11 @@ export function StoryGenerator() {
       const formData = new FormData();
       formData.append("prompt", values.prompt);
       const generatedStory = await generateStory(formData);
-      const { title, chapters } = generatedStory;
-
-      setStory({ title, chapters });
+      setStory(generatedStory);
       setIsLoading(false);
 
-      const chaptersWithImages = await generateImagesForChapters(chapters);
-      setStory((prev) => ({ ...prev, chapters: chaptersWithImages }));
+      // const chaptersWithImages = await generateImagesForChapters(chapters);
+      // setStory((prev) => ({ ...prev, chapters: chaptersWithImages }));
     } catch (error) {
       console.error("Failed to generate story or images:", error);
     } finally {
@@ -79,8 +79,6 @@ export function StoryGenerator() {
 
   return (
     <div className="container mx-auto py-10 px-4">
-      <ActionButtons />
-
       <Card className="w-full max-w-2xl mx-auto mb-8">
         <CardHeader>
           <CardTitle>AI Story Generator</CardTitle>
@@ -144,7 +142,6 @@ export function StoryGenerator() {
           </form>
         </Form>
       </Card>
-
       {story === null || isLoading ? <StorySkeleton /> : <StoryView story={story} />}
     </div>
   );
