@@ -1,7 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Card,
@@ -11,8 +23,30 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
+import { generateStory, generateStreamingStory } from '@/actions/story.actions';
 import { Loader2 } from 'lucide-react';
-import { generateStory } from '@/actions/story.actions';
+import { ChatCompletionStreamingRunner } from 'openai/lib/ChatCompletionStreamingRunner.mjs';
+import { Skeleton } from './ui/skeleton';
+
+function StorySkeleton() {
+  return (
+    <div className='w-full max-w-4xl mx-auto space-y-8'>
+      <Skeleton className='h-12 w-3/4 mx-auto' />
+      {[1, 2, 3].map((_, index) => (
+        <Card key={index}>
+          <CardHeader>
+            <Skeleton className='h-8 w-3/4' />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className='h-4 w-full mb-2' />
+            <Skeleton className='h-4 w-full mb-2' />
+            <Skeleton className='h-4 w-3/4' />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 type Story = {
   title: string;
@@ -39,15 +73,31 @@ const characterSamples = [
   'A interstellar diplomat navigating complex alien cultures to prevent war',
 ];
 
+const formSchema = z.object({
+  prompt: z.string().min(10, {
+    message: 'Prompt must be at least 10 characters.',
+  }),
+});
+
 export function StoryGenerator() {
   const [story, setStory] = useState<Story | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [prompt, setPrompt] = useState('');
 
-  async function handleSubmit(formData: FormData) {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      prompt: '',
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('prompt', values.prompt);
+
       const generatedStory = await generateStory(formData);
+
       setStory(generatedStory);
     } catch (error) {
       console.error('Failed to generate story:', error);
@@ -58,7 +108,7 @@ export function StoryGenerator() {
   }
 
   function handleSampleClick(sample: string) {
-    setPrompt(sample);
+    form.setValue('prompt', sample);
   }
 
   return (
@@ -71,48 +121,65 @@ export function StoryGenerator() {
             chapters.
           </CardDescription>
         </CardHeader>
-        <form action={handleSubmit}>
-          <CardContent>
-            <Textarea
-              name='prompt'
-              placeholder='Enter your story topic or prompt here...'
-              className='min-h-[100px] mb-4'
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-            <div className='text-sm text-muted-foreground mb-2'>
-              Or try one of these sample prompts:
-            </div>
-            <div className='flex flex-wrap gap-2'>
-              {characterSamples.slice(0, 4).map((sample, index) => (
-                <Button
-                  key={index}
-                  variant='outline'
-                  size='sm'
-                  onClick={() => handleSampleClick(sample)}
-                  type='button'
-                >
-                  {sample}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button type='submit' className='w-full' disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Generating Story...
-                </>
-              ) : (
-                'Generate Story'
-              )}
-            </Button>
-          </CardFooter>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name='prompt'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Story Prompt</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder='Enter your story topic or prompt here...'
+                        className='min-h-[100px]'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Provide a brief description or concept for your story.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className='mt-4'>
+                <div className='text-sm text-muted-foreground mb-2'>
+                  Or try one of these sample prompts:
+                </div>
+                <div className='flex flex-wrap gap-2'>
+                  {characterSamples.slice(0, 4).map((sample, index) => (
+                    <Button
+                      key={index}
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleSampleClick(sample)}
+                      type='button'
+                    >
+                      {sample}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type='submit' className='w-full' disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Generating Story...
+                  </>
+                ) : (
+                  'Generate Story'
+                )}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
       </Card>
-
-      {story && (
+      {isLoading && <StorySkeleton />}
+      {story && !isLoading && (
         <div className='w-full max-w-4xl mx-auto space-y-8'>
           <h1 className='text-4xl font-bold text-center'>{story.title}</h1>
           {story.chapters.map((chapter, index) => (
