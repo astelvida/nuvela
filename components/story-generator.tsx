@@ -31,7 +31,7 @@ import { Loader2 } from "lucide-react";
 import { StorySkeleton } from "./story-skeleton";
 import { characterSamples, Story } from "@/lib/utils";
 import { createStory, getStories } from "@/actions/dbActions";
-import { ToggleStoryView } from "./ToggleStoryView";
+import { ToggleStoryView } from "./story-preview";
 import mockData from "@/lib/mockdata.json";
 
 const formSchema = z.object({

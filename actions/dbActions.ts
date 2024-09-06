@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import * as schema from "@/db/schema";
 import { db } from "@/db/drizzle";
 
+const isAuth = "sevdix";
 interface Chapter {
   num: number;
   title: string;
@@ -45,16 +46,31 @@ export async function createStory(storyData: Story) {
 }
 
 export const getStories = async () => {
-  // const data = await db.select().from(story);
-  const result = await db.query.story.findMany({
+  const stories = await db.query.story.findMany({
     with: {
       chapter: true,
     },
   });
-
-  console.log({ result });
-  return result;
+  console.log("number of stories", stories.length);
+  return stories;
 };
+
+export const getUserStories = async (userId = isAuth) => {
+  // const isAuth = ;
+  const { story, chapter } = schema;
+  const stories = await db.select().from(story).where(eq(story.userId, userId));
+  console.log("number of storiess", stories.length);
+  return stories;
+};
+
+export const deleteStories = async () => {
+  const { story } = schema;
+  await db.delete(story);
+  revalidatePath("/stories");
+  console.log("Stories deleted");
+};
+
+// deleteStories();
 
 // export const deleteTodo = async (id: number) => {
 //   await db.delete(todo).where(eq(todo.id, id));
