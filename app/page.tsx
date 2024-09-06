@@ -13,7 +13,6 @@ export default function Page() {
           </button>
         </div>
       </header>
-
       <StoryGenerator />
     </div>
   );
