@@ -1,8 +1,10 @@
-// import { StoryGenerator } from "@/components/story-generator";
 import { StoryGenerator } from "@/components/story-generator";
+import { auth } from "@clerk/nextjs/server";
 import { MenuIcon, Settings, Home, User } from "lucide-react";
 
 export default function Page() {
+  console.dir(auth(), { depth: 7 });
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 bg-primary text-primary-foreground shadow-md z-10">

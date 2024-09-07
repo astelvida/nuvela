@@ -9,11 +9,11 @@ import { relations } from "drizzle-orm";
 //  */
 // export const createTable = pgTableCreator((name) => `nuvela_${name}`);
 
-export const todo = pgTable("todo", {
-  id: integer("id").primaryKey(),
-  text: text("text").notNull(),
-  done: boolean("done").default(false).notNull(),
-});
+// export const todo = pgTable("todo", {
+//   id: integer("id").primaryKey(),
+//   text: text("text").notNull(),
+//   done: boolean("done").default(false).notNull(),
+// });
 
 export const story = pgTable("story", {
   id: serial("id").primaryKey(),
