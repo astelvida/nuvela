@@ -5,9 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Save, Mic } from "lucide-react";
-import { createUploadedFileUrl, uploadFromUrl } from "@/actions/image.actions";
-import { tts } from "@/actions/story.actions";
+import { Save, Mic, Volume2, Pause, Play } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -26,13 +24,14 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { generateStory, generateImagesForChapters } from "@/actions/story.actions";
+import { generateStory, generateImagesForChapters } from "@/actions/openai.actions";
 import { Loader2 } from "lucide-react";
 import { StorySkeleton } from "./story-skeleton";
 import { characterSamples, Story } from "@/lib/utils";
-import { createStory, getStories } from "@/actions/dbActions";
+import { createStory } from "@/actions/db.actions";
 import { ToggleStoryView } from "./story-preview";
 import mockData from "@/lib/mockdata.json";
+import { useAudioPlayback } from "@/lib/hooks/useAudioPlayback";
 
 const formSchema = z.object({
   prompt: z.string().min(10, {
@@ -43,12 +42,9 @@ const formSchema = z.object({
 export function StoryGenerator() {
   const [story, setStory] = useState<Story | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { isNarrating, isPlaying, audioRef, handleNarrate, togglePlayPause } = useAudioPlayback();
 
   useEffect(() => {
-    uploadFromUrl(
-      "https://oaidalleapiprodscus.blob.core.windows.net/private/org-BAl3YpV7pumlbIxLB1lll9Li/user-3GYzta5SGwlZuZnghyMvx5Cc/img-AbXb5N1lS2XIVTrZ0YD5rUmF.png?st=2024-09-06T22%3A42%3A34Z&se=2024-09-07T00%3A42%3A34Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-09-06T22%3A28%3A13Z&ske=2024-09-07T22%3A28%3A13Z&sks=b&skv=2024-08-04&sig=OVYv/Wix6OkHNTsexu3eB5Rei2ZktYpG380TQXunoXE%3D"
-    ).then((res) => console.log("uploaded file", res));
-
     setStory(mockData);
   }, []);
 
@@ -80,6 +76,10 @@ export function StoryGenerator() {
 
   function handleSampleClick(sample: string) {
     form.setValue("prompt", sample);
+  }
+
+  function onNarrate(text: any): void {
+    throw new Error("Function not implemented.");
   }
 
   return (
@@ -166,13 +166,28 @@ export function StoryGenerator() {
                   <Save className="mr-2 h-4 w-4" />
                   Save Story
                 </Button>
-                <form action={tts}>
-                  <Button className="w-full" type="submit">
-                    <Mic className="mr-2 h-4 w-4" />
-                    Narrate
+
+                <Button onClick={() => handleNarrate(story)} disabled={isNarrating || isPlaying}>
+                  <Volume2 className="mr-2 h-4 w-4" />
+                  {isNarrating ? "Narrating..." : "Narrate"}
+                </Button>
+                {isPlaying && (
+                  <Button onClick={togglePlayPause} disabled={isNarrating}>
+                    {isPlaying ? (
+                      <>
+                        <Pause className="mr-2 h-4 w-4" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Play
+                      </>
+                    )}
                   </Button>
-                </form>
+                )}
               </div>
+              <audio ref={audioRef} className="hidden" />
             </div>
           </div>
         ) : (

@@ -5,6 +5,5 @@ export interface Chapter {
 }
 export interface Story {
   title: string;
-  userId: string;
   chapters: Chapter[];
 }

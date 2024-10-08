@@ -1,5 +1,5 @@
 import { integer, text, boolean, pgTable, serial, varchar, timestamp } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { InferInsertModel, InferSelectModel, relations } from "drizzle-orm";
 
 // /**
 //  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -8,12 +8,6 @@ import { relations } from "drizzle-orm";
 //  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
 //  */
 // export const createTable = pgTableCreator((name) => `nuvela_${name}`);
-
-// export const todo = pgTable("todo", {
-//   id: integer("id").primaryKey(),
-//   text: text("text").notNull(),
-//   done: boolean("done").default(false).notNull(),
-// });
 
 export const story = pgTable("story", {
   id: serial("id").primaryKey(),
@@ -46,12 +40,8 @@ export const chapterRelations = relations(chapter, ({ one }) => ({
   story: one(story, { fields: [chapter.storyId], references: [story.id] }),
 }));
 
-// // export const images = createTable("images", {
-// //   id: serial("id").primaryKey(),
-// //   storyId: uuid("story_id")
-// //     .references(() => stories.id)
-// //     .notNull(),
-// //   title: varchar("title", { length: 255 }).notNull(),
-// //   content: text("content").notNull(),
-// //   image: varchar("image", { length: 2083 }).notNull(), // Max URL length
-// // });
+export type StoryModel = InferInsertModel<typeof story>;
+export type ChapterModel = InferInsertModel<typeof chapter>;
+
+export type StorySelect = InferSelectModel<typeof story>;
+export type ChapterSelect = InferSelectModel<typeof chapter>;

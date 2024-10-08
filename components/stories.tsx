@@ -1,14 +1,14 @@
-import { deleteStories } from "@/actions/dbActions";
+import { deleteStory } from "@/actions/db.actions";
 import { Button } from "./ui/button";
 
 export default function Stories({ stories }) {
   return (
     <div>
-      <form action={deleteStories}>
+      {/* <form action={deleteStory}>
         <Button type="submit" variant="destructive">
-          Delete All Stories
+          Delete Story
         </Button>
-      </form>
+      </form> */}
       <ul>
         {stories.map((story) => (
           <li key={story.id}>
